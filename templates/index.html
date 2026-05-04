@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Resume Screener — Enterprise Recruitment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --ink: #0d1017;
+            --white: #ffffff;
+            --panel: rgba(255, 255, 255, 0.16);
+            --stroke: rgba(255, 255, 255, 0.32);
+            --shadow: 0 24px 60px rgba(10, 14, 34, 0.2);
+            --control-height: 52px;
+            --label-height: 20px;
+            --label-gap: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Sora", sans-serif;
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 15% 20%, rgba(147, 197, 253, 0.6), transparent 48%),
+                radial-gradient(circle at 90% 10%, rgba(252, 211, 77, 0.35), transparent 40%),
+                radial-gradient(circle at 80% 85%, rgba(34, 211, 238, 0.3), transparent 45%),
+                linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-attachment: fixed;
+        }
+
+        .page {
+            width: 100%;
+            padding: clamp(24px, 3vw, 42px) clamp(20px, 4vw, 56px) clamp(48px, 6vw, 72px);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .glow {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.45;
+            pointer-events: none;
+            animation: float 14s ease-in-out infinite;
+        }
+
+        .glow.glow-a {
+            top: -120px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.8), transparent 70%);
+        }
+
+        .glow.glow-b {
+            bottom: -140px;
+            right: -120px;
+            background: radial-gradient(circle, rgba(45, 212, 191, 0.7), transparent 70%);
+            animation-delay: 3s;
+        }
+
+        header.hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 28px;
+            align-items: center;
+            margin-bottom: 32px;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: hero-in 0.9s ease forwards;
+        }
+
+        .hero h1 {
+            font-family: "Unbounded", sans-serif;
+            font-size: clamp(2.2rem, 3.8vw, 3.8rem);
+            margin: 0 0 12px;
+            color: var(--white);
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--stroke);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-card {
+            background: var(--panel);
+            border-radius: 24px;
+            padding: 24px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .hero-card strong {
+            color: #fff;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            background: var(--panel);
+            padding: 40px;
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(20px);
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: minmax(240px, 1.5fr) auto minmax(200px, 0.9fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .upload-section .field {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field--button {
+            align-items: flex-start;
+            padding-top: calc(var(--label-height) + var(--label-gap));
+        }
+
+        .file-picker {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 48px;
+            width: 100%;
+        }
+
+        .file-picker input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .file-display {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.88);
+            color: #111827;
+            font-size: 0.95rem;
+            height: var(--control-height);
+            line-height: var(--control-height);
+        }
+
+        .file-display span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transform: translateY(-4px);
+        }
+
+        .file-cta {
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-weight: 600;
+            border: 1px solid rgba(15, 23, 42, 0.2);
+            background: rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            height: var(--control-height);
+            display: inline-flex;
+            align-items: center;
+            line-height: var(--control-height);
+        }
+
+        .file-cta:hover {
+            background: rgba(15, 23, 42, 0.16);
+        }
+
+        .upload-status {
+            margin-top: 12px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.95rem;
+        }
+
+        .upload-status strong {
+            color: #fff;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 600;
+            min-height: var(--label-height);
+            line-height: var(--label-height);
+            margin-bottom: var(--label-gap);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 12px 14px;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.88);
+            color: #111827;
+            font-size: 0.98rem;
+        }
+
+        select {
+            appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #111827 50%),
+                linear-gradient(135deg, #111827 50%, transparent 50%),
+                linear-gradient(to right, rgba(17, 24, 39, 0.12), rgba(17, 24, 39, 0.12));
+            background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%, calc(100% - 42px) 50%;
+            background-size: 6px 6px, 6px 6px, 1px 60%;
+            background-repeat: no-repeat;
+        }
+
+        select:focus,
+        textarea:focus {
+            outline: 2px solid rgba(255, 255, 255, 0.65);
+            outline-offset: 2px;
+        }
+
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .actions::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -24px;
+            height: 1px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .upload-section .btn {
+            height: var(--control-height);
+            padding: 12px 18px;
+            min-width: 0;
+        }
+
+        .upload-section select {
+            height: var(--control-height);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(139, 92, 246, 0.25);
+            border: 1.5px solid rgba(139, 92, 246, 0.5);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.35);
+            border-color: rgba(139, 92, 246, 0.7);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .btn.is-loading .btn-spinner {
+            display: inline-block;
+        }
+
+        .btn.is-loading .btn-label {
+            display: none;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 24px;
+            margin-top: 28px;
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: 22px;
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+            min-height: 240px;
+            color: rgba(255, 255, 255, 0.85);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .panel h2 {
+            font-family: "Unbounded", sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.02em;
+            margin: 0 0 14px;
+            color: #fff;
+        }
+
+        .panel-body {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .panel--active {
+            animation: panel-in 0.6s ease both;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.93rem;
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .loading-state {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .is-hidden {
+            display: none;
+        }
+
+        .empty {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(20px); }
+        }
+
+        @keyframes hero-in {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes panel-in {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1100px) {
+            .results-grid {
+                grid-template-columns: repeat(2, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .hero {
+                padding: 40px 40px 30px;
+            }
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .command-center {
+                padding: 40px;
+            }
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+            .upload-section {
+                grid-template-columns: 1fr;
+            }
+            .results-section {
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 30px 20px 20px;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            .command-center {
+                padding: 30px 20px;
+            }
+            .input-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .upload-section {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .btn {
+                width: 100%;
+            }
+            .results-section {
+                padding: 30px 20px;
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .result-card {
+                min-height: 350px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="glow glow-a"></div>
+        <div class="glow glow-b"></div>
+
+        <header class="hero">
+            <div>
+                <div class="pill">Premium ATS</div>
+                <h1>AI Resume Screening System</h1>
+                <p>Full-width recruiting intelligence that ranks, analyzes, and recommends candidates with precision and clarity.</p>
+            </div>
+            <div class="hero-card">
+                <p><strong>Live pipeline ready.</strong></p>
+                <p>Choose a stream, paste the job description, and launch analysis in seconds. Results appear instantly in the panels below.</p>
+            </div>
+        </header>
+
+        <section class="controls">
+            <div class="upload-section">
+                <div class="field">
+                    <label for="resumeFiles">Upload resumes (PDF only)</label>
+                    <div class="file-picker">
+                        <label class="file-cta" for="resumeFiles">Choose folder</label>
+                        <div class="file-display"><span id="fileDisplayText">No folder selected</span></div>
+                        <input id="resumeFiles" type="file" multiple accept=".pdf" webkitdirectory directory />
+                    </div>
+                    <div id="uploadStatus" class="upload-status"></div>
+                </div>
+                <div class="field field--button">
+                    <button id="uploadButton" class="btn btn-secondary" type="button">📤 Upload Resumes</button>
+                </div>
+                <div class="field">
+                    <label for="streamSelect">Stream focus</label>
+                    <select id="streamSelect"></select>
+                </div>
+            </div>
+            <div class="input-section">
+                <div class="field">
+                    <label for="jobDescription">Job description (max 100 words)</label>
+                    <textarea id="jobDescription" placeholder="Paste or type the job description (up to 100 words)..."></textarea>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary js-action" data-label="Run Hiring Intelligence" onclick="runHiringIntelligence()">
+                    <span class="btn-label">🚀 Run Hiring Intelligence</span>
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
+                <div id="loadingState" class="loading-state is-hidden">Processing...</div>
+            </div>
+        </section>
+
+        <section class="results-grid">
+            <div id="rankingPanel" class="panel">
+                <h2>Ranking</h2>
+                <div id="ranking" class="panel-body empty">Candidate fit ordered by match strength.</div>
+            </div>
+            <div id="analysisPanel" class="panel">
+                <h2>Analysis</h2>
+                <div id="analysis" class="panel-body empty">Capability signals, domain strengths, and detected gaps.</div>
+            </div>
+            <div id="recommendationPanel" class="panel">
+                <h2>Recommendation</h2>
+                <div id="recommendation" class="panel-body empty">System decision based on evidence and requirements.</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const actionButtons = Array.from(document.querySelectorAll(".js-action"));
+        const loadingState = document.getElementById("loadingState");
+        const streamSelect = document.getElementById("streamSelect");
+        const uploadButton = document.getElementById("uploadButton");
+        const resumeFilesInput = document.getElementById("resumeFiles");
+        const uploadStatus = document.getElementById("uploadStatus");
+        const fileDisplayText = document.getElementById("fileDisplayText");
+
+        let pollingJobId = null;
+        let pollingTimerId = null;
+        let pollingPromise = null;
+        let pollingInFlight = false;
+        let pollingIntervalMs = 800;
+        let loadingHideTimer = null;
+        let loadingProgress = null;
+        let loadingLabel = "";
+        let hasUploads = false;
+        const defaultJD = {
+            "ENGINEERING": "Build and ship reliable software services. Collaborate with product and design, write clean code, maintain APIs, and improve system performance. Experience with Python or JavaScript, REST APIs, and cloud deployment preferred.",
+            "DATA SCIENCE": "Analyze datasets to generate insights and build predictive models. Use Python, SQL, and ML frameworks, communicate findings clearly, and partner with stakeholders to drive decisions.",
+            "ACCOUNTING": "Manage financial records, reconcile accounts, prepare reports, and ensure compliance with accounting standards. Strong attention to detail and Excel proficiency required.",
+            "HR": "Support hiring, onboarding, employee relations, and policy compliance. Strong communication skills and experience with HR processes required.",
+            "SALES": "Drive revenue through prospecting, demos, and closing deals. Manage pipeline, collaborate with marketing, and consistently hit targets.",
+            "MARKETING": "Plan and execute campaigns, manage content, track performance metrics, and optimize lead generation. Experience with digital channels preferred.",
+            "DESIGN": "Create user-centered visual and product designs. Produce wireframes, mockups, and UI assets while collaborating with engineering and product teams."
+        };
+
+        function setLoading(isLoading, labelText) {
+            actionButtons.forEach(button => {
+                button.disabled = isLoading;
+                button.classList.toggle("is-loading", isLoading);
+            });
+            loadingState.classList.toggle("is-hidden", !isLoading);
+            if (labelText !== undefined) {
+                loadingLabel = labelText;
+            }
+            updateLoadingText();
+        }
+
+        function updateLoadingText() {
+            if (!loadingLabel) {
+                return;
+            }
+            if (typeof loadingProgress === "number") {
+                const percent = Math.round(loadingProgress);
+                loadingState.textContent = `${loadingLabel} (${percent}%)`;
+                return;
+            }
+            loadingState.textContent = loadingLabel;
+        }
+
+        function startLoadingProgress(label) {
+            if (loadingHideTimer) {
+                clearTimeout(loadingHideTimer);
+                loadingHideTimer = null;
+            }
+            loadingLabel = label;
+            loadingProgress = null;
+            setLoading(true);
+        }
+
+        function finishLoadingProgress() {
+            if (!loadingLabel) {
+                setLoading(false);
+                return;
+            }
+            loadingProgress = 100;
+            updateLoadingText();
+            loadingHideTimer = setTimeout(() => {
+                loadingLabel = "";
+                loadingProgress = null;
+                setLoading(false);
+            }, 350);
+        }
+
+        function updateLoadingProgressFromJob(job) {
+            if (!job || typeof job.progress !== "number") {
+                return;
+            }
+            loadingProgress = Math.max(0, Math.min(100, job.progress));
+            updateLoadingText();
+        }
+
+        function stopPolling() {
+            if (pollingTimerId) {
+                clearTimeout(pollingTimerId);
+            }
+            pollingTimerId = null;
+            pollingJobId = null;
+            pollingPromise = null;
+            pollingInFlight = false;
+            pollingIntervalMs = 800;
+        }
+
+        function pollJob(jobId) {
+            if (pollingPromise && pollingJobId === jobId) {
+                return pollingPromise;
+            }
+            stopPolling();
+            pollingJobId = jobId;
+
+            const maxTotalMs = 60 * 60 * 1000;
+            const maxIdleMs = 20 * 60 * 1000;
+            const startedAt = Date.now();
+            let lastProgress = -1;
+            let lastProgressAt = startedAt;
+
+            let resolveFn;
+            let rejectFn;
+            pollingPromise = new Promise((resolve, reject) => {
+                resolveFn = resolve;
+                rejectFn = reject;
+            });
+
+            const resolveJob = (job) => {
+                stopPolling();
+                if (resolveFn) {
+                    resolveFn(job);
+                }
+            };
+
+            const rejectJob = (error) => {
+                stopPolling();
+                if (rejectFn) {
+                    rejectFn(error);
+                }
+            };
+
+            const scheduleNext = () => {
+                if (!pollingJobId || pollingJobId !== jobId) {
+                    return;
+                }
+                pollingIntervalMs = Math.min(1000, pollingIntervalMs + 50);
+                pollingTimerId = setTimeout(tick, pollingIntervalMs);
+            };
+
+            const tick = async () => {
+                if (!pollingJobId || pollingJobId !== jobId) {
+                    return;
+                }
+                if (pollingInFlight) {
+                    scheduleNext();
+                    return;
+                }
+                pollingInFlight = true;
+                try {
+                    const response = await fetch(`/job/${jobId}`);
+                    let job = null;
+                    if (response.ok) {
+                        job = await response.json();
+                    } else {
+                        const errorPayload = await response.text();
+                        throw new Error(`Job lookup failed: ${response.status} ${errorPayload}`);
+                    }
+                    updateLoadingProgressFromJob(job);
+                    if (typeof job.progress === "number" && job.progress !== lastProgress) {
+                        lastProgress = job.progress;
+                        lastProgressAt = Date.now();
+                    }
+                    if (job.status === "done" || job.status === "error") {
+                        resolveJob(job);
+                        return;
+                    }
+                    if (Date.now() - startedAt > maxTotalMs) {
+                        rejectJob(new Error("Job polling timed out."));
+                        return;
+                    }
+                    if (Date.now() - lastProgressAt > maxIdleMs) {
+                        rejectJob(new Error("Job polling stalled."));
+                        return;
+                    }
+                } catch (error) {
+                    rejectJob(error);
+                    return;
+                } finally {
+                    pollingInFlight = false;
+                }
+                scheduleNext();
+            };
+
+            tick();
+            return pollingPromise;
+        }
+
+        function setActionsEnabled(isEnabled) {
+            actionButtons.forEach(button => {
+                button.disabled = !isEnabled;
+            });
+        }
+
+        function ensureStreamSelected() {
+            if (!streamSelect || !streamSelect.value) {
+                alert("Please select a stream before continuing.");
+                return false;
+            }
+            return true;
+        }
+
+        function animatePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            panel.classList.remove("panel--active");
+            void panel.offsetWidth;
+            panel.classList.add("panel--active");
+        }
+
+        function applyDefaultJobDescription(stream) {
+            const template = defaultJD[stream];
+            if (!template) {
+                return;
+            }
+            const jobDescriptionInput = document.getElementById("jobDescription");
+            if (jobDescriptionInput) {
+                jobDescriptionInput.value = template;
+            }
+        }
+
+        function setUploadStatus(message) {
+            if (!uploadStatus) {
+                return;
+            }
+            uploadStatus.innerHTML = "";
+            if (!message) {
+                return;
+            }
+            const messageNode = document.createElement("div");
+            messageNode.innerHTML = message;
+            uploadStatus.appendChild(messageNode);
+        }
+
+        async function uploadResumes() {
+            if (!resumeFilesInput || !resumeFilesInput.files || resumeFilesInput.files.length === 0) {
+                setUploadStatus("Please select a folder with PDF resumes.");
+                return;
+            }
+
+            const formData = new FormData();
+            Array.from(resumeFilesInput.files).forEach(file => {
+                formData.append("files", file);
+            });
+
+            setLoading(true, "Uploading resumes...");
+            if (uploadButton) {
+                uploadButton.disabled = true;
+            }
+            try {
+                const response = await fetch("/upload_resumes", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.error || data.detail) {
+                    const errorMessage = data.error || data.detail || "Upload failed.";
+                    setUploadStatus(errorMessage);
+                    return;
+                }
+
+                const uploaded = Array.isArray(data.uploaded) ? data.uploaded : [];
+                hasUploads = uploaded.length > 0;
+                setUploadStatus(`Uploaded <strong>${uploaded.length}</strong> resumes successfully.`);
+                resumeFilesInput.value = "";
+                if (fileDisplayText) {
+                    fileDisplayText.textContent = "No folder selected";
+                }
+                await loadStreams();
+            } catch (error) {
+                setUploadStatus(`Upload failed: ${error}`);
+            } finally {
+                if (uploadButton) {
+                    uploadButton.disabled = false;
+                }
+                setLoading(false);
+            }
+        }
+
+        function getLimitedJobDescription() {
+            const jobDescription = document.getElementById("jobDescription").value.trim();
+            if (!jobDescription) {
+                return { text: "", truncated: false };
+            }
+            const tokens = jobDescription.split(/\s+/).filter(Boolean);
+            if (tokens.length <= 100) {
+                return { text: jobDescription, truncated: false };
+            }
+            return { text: tokens.slice(0, 100).join(" "), truncated: true };
+        }
+
+        async function runEvaluation(label) {
+            const selectedStream = document.getElementById("streamSelect").value;
+            const limited = getLimitedJobDescription();
+            const jobDescription = limited.text;
+
+            if (!hasUploads) {
+                alert("Please upload resumes first.");
+                return null;
+            }
+
+            if (!ensureStreamSelected()) {
+                return null;
+            }
+
+            if (!jobDescription) {
+                alert("Please enter job description");
+                return null;
+            }
+
+            if (limited.truncated) {
+                alert("Job description was trimmed to 100 words for faster processing.");
+            }
+
+            startLoadingProgress(label);
+            try {
+                console.log("[UI] Request: POST /recommend", {
+                    job_description: jobDescription,
+                    stream: selectedStream
+                });
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        job_description: jobDescription,
+                        stream: selectedStream
+                    })
+                });
+                const data = await response.json();
+                console.log("[UI] Response: /recommend", data);
+                if (!response.ok || data.error || data.detail || !data.job_id) {
+                    const errorMessage = data.error || data.detail || "Request failed.";
+                    document.getElementById("ranking").innerHTML = `<div class="card">${errorMessage}</div>`;
+                    document.getElementById("recommendation").innerHTML = `<div class="card">${errorMessage}</div>`;
+                    return null;
+                }
+                const job = await pollJob(data.job_id);
+                if (job.status === "error") {
+                    const errorMessage = job.result && job.result.error ? job.result.error : "Job failed.";
+                    document.getElementById("ranking").innerHTML = `<div class="card">${errorMessage}</div>`;
+                    document.getElementById("recommendation").innerHTML = `<div class="card">${errorMessage}</div>`;
+                    return null;
+                }
+                return job.result || null;
+            } catch (error) {
+                document.getElementById("ranking").innerHTML = `<div class="card">${error}</div>`;
+                document.getElementById("recommendation").innerHTML = `<div class="card">${error}</div>`;
+                return null;
+            } finally {
+                finishLoadingProgress();
+            }
+        }
+
+        async function runHiringIntelligence() {
+            const result = await runEvaluation("Evaluating candidates");
+            if (!result) {
+                return;
+            }
+
+            if (!result.best_candidate || result.total_score === undefined || !result.recommendation) {
+                const detail = Object.keys(result).length ? JSON.stringify(result) : "No result payload.";
+                document.getElementById("recommendation").innerHTML = `<div class=\"card\">Recommendation data is incomplete. ${detail}</div>`;
+                return;
+            }
+
+            const recommendationHtml = `
+                <div class="card">
+                    <h3>Final Decision</h3>
+                    <p><strong>Candidate:</strong> ${result.best_candidate}</p>
+                    <p><strong>Score:</strong> ${result.total_score}</p>
+                    <p><strong>Recommendation:</strong> ${result.recommendation}</p>
+                </div>
+            `;
+
+            let rankingHtml = "<div class=\"card\">Ranking data is not available.</div>";
+            if (Array.isArray(result.ranking)) {
+                rankingHtml = "<table>";
+                rankingHtml += "<tr><th>Rank</th><th>Filename</th><th>Match %</th></tr>";
+                result.ranking.forEach(item => {
+                    rankingHtml += `<tr>
+                                <td>${item.rank}</td>
+                                <td>${item.filename}</td>
+                                <td>${item.match_percentage}</td>
+                            </tr>`;
+                });
+                rankingHtml += "</table>";
+            }
+
+            let skillsHtml = "<div class=\"card\"><h3>Skill Breakdown</h3>";
+            skillsHtml += "<table>";
+            skillsHtml += "<tr><th>Domain</th><th>Score</th></tr>";
+
+            (Array.isArray(result.skills) ? result.skills : []).forEach(item => {
+                skillsHtml += `<tr>
+                            <td>${item.domain}</td>
+                            <td>${item.score}</td>
+                        </tr>`;
+            });
+
+            skillsHtml += "</table>";
+            skillsHtml += "<h3>Skill Gaps</h3>";
+            if (result.missing_skills && result.missing_skills.length > 0) {
+                skillsHtml += "<p>" + result.missing_skills.join(", ") + "</p>";
+            } else {
+                skillsHtml += "<p>No major gaps detected.</p>";
+            }
+            skillsHtml += "</div>";
+
+            document.getElementById("recommendation").innerHTML = recommendationHtml;
+            document.getElementById("ranking").innerHTML = rankingHtml;
+            document.getElementById("analysis").innerHTML = skillsHtml;
+
+            animatePanel("recommendationPanel");
+            animatePanel("rankingPanel");
+            animatePanel("analysisPanel");
+        }
+
+        async function loadStreams() {
+            try {
+                console.log("[UI] Request: GET /streams");
+                const response = await fetch('/streams');
+                const data = await response.json();
+                const select = document.getElementById("streamSelect");
+                const streams = data.streams || [];
+
+                console.log("[UI] Response: /streams", data);
+
+                select.innerHTML = "";
+                if (streams.length === 0) {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No streams available";
+                    select.appendChild(option);
+                    setActionsEnabled(false);
+                    document.getElementById("ranking").innerHTML = "<div class=\"card\">No streams found. Upload resumes to start.</div>";
+                } else {
+                    streams.forEach(stream => {
+                        const option = document.createElement("option");
+                        option.value = stream;
+                        option.textContent = stream;
+                        select.appendChild(option);
+                    });
+                    setActionsEnabled(true);
+                    if (streams.length > 0) {
+                        select.value = streams[0];
+                        applyDefaultJobDescription(streams[0]);
+                    }
+                }
+            } catch (error) {
+                document.getElementById("streamSelect").innerHTML = "";
+                setActionsEnabled(false);
+                document.getElementById("ranking").innerHTML = "<div class=\"card\">Failed to load streams. Please refresh.</div>";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (uploadButton) {
+                uploadButton.addEventListener("click", uploadResumes);
+            }
+            if (resumeFilesInput) {
+                resumeFilesInput.addEventListener("change", () => {
+                    const fileCount = resumeFilesInput.files ? resumeFilesInput.files.length : 0;
+                    if (fileDisplayText) {
+                        fileDisplayText.textContent = fileCount > 0 ? `${fileCount} files selected` : "No folder selected";
+                    }
+                    if (fileCount === 0) {
+                        setUploadStatus("");
+                    }
+                });
+            }
+            if (streamSelect) {
+                streamSelect.addEventListener("change", event => {
+                    applyDefaultJobDescription(event.target.value);
+                });
+            }
+            await loadStreams();
+        });
+    </script>
+</body>
+</html>
