@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+PyPDF2
+pandas
+scikit-learn
+torch
+transformers
+sentence-transformers
+python-multipart
+jinja2
+colorama
+difflib
