@@ -9,4 +9,3 @@ sentence-transformers
 python-multipart
 jinja2
 colorama
-difflib
